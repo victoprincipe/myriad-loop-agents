@@ -1,0 +1,17 @@
+{
+  "name": "myriad-loop",
+  "version": "1.0.0",
+  "description": "Myriad Loop — AI-native SDLC orchestration agents for opencode",
+  "keywords": ["opencode", "agents", "myriad-loop", "sdlc", "orchestration"],
+  "homepage": "https://github.com/anomalyco/myriad-loop-agents",
+  "license": "MIT",
+  "author": "Myriad Loop",
+  "bin": {
+    "myriad-loop": "./bin/cli.js",
+    "myriad-init": "./bin/cli.js"
+  },
+  "files": ["agents/", "bin/", "scripts/"],
+  "engines": {
+    "node": ">=18"
+  }
+}
