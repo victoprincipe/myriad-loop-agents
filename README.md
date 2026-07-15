@@ -1,4 +1,4 @@
-# myriad-loop
+# Myriad loop
 
 Myriad Loop agents for [opencode](https://opencode.ai) — an AI-native software development lifecycle orchestration system.
 
