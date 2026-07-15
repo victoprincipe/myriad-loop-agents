@@ -1,3 +1,5 @@
+<img width="2752" height="1536" alt="Gemini_Generated_Image_4rua3w4rua3w4rua" src="https://github.com/user-attachments/assets/7d6f4b98-4f80-4e21-8f6b-9bf1f5e3e918" />
+
 # Myriad loop
 
 Myriad Loop agents for [opencode](https://opencode.ai) — an AI-native software development lifecycle orchestration system.
