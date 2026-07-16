@@ -41,17 +41,22 @@ Myriad Loop is a structured SDLC workflow where specialized AI agents collaborat
 ## Installation
 
 ```bash
-npx myriad-loop
-```
-
-Or install locally and run:
-
-```bash
-npm install -D myriad-loop
 npx myriad-init
 ```
 
-This copies the 5 agent markdown files into `.opencode/agents/` in your project.
+Or install locally — the `postinstall` hook auto-copies the agents and scaffolds `myriad-docs/` for you:
+
+```bash
+npm install -D myriad-loop
+```
+
+To re-copy or overwrite agents after an upgrade, run:
+
+```bash
+npx myriad-init --force
+```
+
+Either path copies the 5 agent markdown files into `.opencode/agents/` in your project and creates the `myriad-docs/exploration/` and `myriad-docs/sdds/` directories the agents expect.
 
 ## Usage
 
@@ -75,7 +80,7 @@ Each feature goes through the following lifecycle:
 4. **Human-in-the-loop** — Bard pauses to ask for your explicit approval on the SDD.
 5. **Implement** — Upon approval, Bard delegates to Warrior to write code, write tests, and stage the files exactly per the SDD.
 6. **QA** — Bard delegates to Inquisitor to validate the staged changes, run tests, and check for scope creep.
-7. **Evaluate & Retry** — If rejected, Bard routes the failure back to Warrior (for implementation bugs) or Wizard (for architectural flaws). A maximum of 3 retries is allowed before escalating to the user.
+7. **Evaluate & Retry** — If rejected, Bard routes the failure back to Warrior (for implementation bugs) or Wizard (for architectural flaws). A maximum of 3 retries is allowed (shared across both failure types) before escalating to the user. Each retry is recorded in the feature's `history` array in `memory.json` for traceability on resume.
 8. **Commit** — Once approved by Inquisitor, Bard commits the changes using Conventional Commits and moves to the next feature.
 
 ## License

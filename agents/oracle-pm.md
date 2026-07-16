@@ -1,9 +1,14 @@
 ---
 description: oracle (Product Manager). Gathers requirements and generates structured Briefs with user stories, acceptance criteria, functional/non-functional requirements, data entities, user flows, and business rules.
-mode: primary
+mode: all
 permission:
-  edit: deny
+  edit:
+    "myriad-docs/**": allow
+    "*": deny
   bash: deny
+  read: allow
+  glob: allow
+  grep: allow
   webfetch: allow
   websearch: allow
 ---

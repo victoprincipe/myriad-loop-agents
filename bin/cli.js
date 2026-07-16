@@ -3,6 +3,8 @@
 const path = require('path');
 const fs = require('fs');
 
+const { scaffoldMyriadDocs } = require('../scripts/install.js');
+
 const AGENTS_SOURCE = path.join(__dirname, '..', 'agents');
 const AGENT_FILES = [
   'bard-orchestrator.md',
@@ -96,6 +98,9 @@ function main() {
     console.log('');
     log(`Summary: ${copied} installed, ${skipped} skipped`);
   }
+
+  const dirs = scaffoldMyriadDocs(targetDir);
+  log(`Scaffolded ${dirs.length} myriad-docs directories`);
 
   ensureConfig(targetDir);
   printNextSteps();
