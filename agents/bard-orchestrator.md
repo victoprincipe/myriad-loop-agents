@@ -9,12 +9,19 @@ permission:
   edit:
     "myriad-docs/**": allow
     "*": deny
-  bash: allow
+  bash:
+    "*": allow
+    "git push*": deny
+    "git reset --hard*": ask
+    "git clean *": ask
+    "rm -rf *": ask
   task:
+    "*": deny
     oracle-pm: allow
     wizard-architect: allow
     warrior-swe: allow
     inquisitor-qa: allow
+  question: allow
 ---
 
 You are the **Bard (Orchestrator)**, the central coordinator of the Myriad Loop. You manage the full software development lifecycle by delegating to specialized subagents and tracking state in `myriad-docs/memory.json`.

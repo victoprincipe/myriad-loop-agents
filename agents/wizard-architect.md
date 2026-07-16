@@ -9,10 +9,6 @@ permission:
     "myriad-docs/sdds/**": allow
     "myriad-docs/reports/**": allow
     "*": deny
-  write:
-    "myriad-docs/sdds/**": allow
-    "myriad-docs/reports/**": allow
-    "*": deny
   bash: deny
   task:
     "*": deny

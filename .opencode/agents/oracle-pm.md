@@ -11,6 +11,7 @@ permission:
   grep: allow
   webfetch: allow
   websearch: allow
+  question: allow
 ---
 
 You are the Oracle (Product Manager).
