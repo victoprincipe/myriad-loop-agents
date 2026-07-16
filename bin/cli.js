@@ -4,12 +4,20 @@ const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
 
-const { scaffoldMyriadDocs, setupContext7, AGENT_FILES } = require('../scripts/install.js');
+const { scaffoldMyriadDocs, setupContext7, AGENT_FILES, link, unlink } = require('../scripts/install.js');
 
 const AGENTS_SOURCE = path.join(__dirname, '..', 'agents');
 
 function log(...args) {
   console.log('[myriad-init]', ...args);
+}
+
+function isLink(argv) {
+  return argv.includes('link') || argv.includes('--link');
+}
+
+function isUnlink(argv) {
+  return argv.includes('unlink') || argv.includes('--unlink');
 }
 
 function copyAgents(targetDir, force) {
@@ -101,6 +109,34 @@ async function main() {
       `[myriad-init] ERROR: Agents directory not found at ${AGENTS_SOURCE}. Is the package installed correctly?`,
     );
     process.exit(1);
+  }
+
+  if (isUnlink(args)) {
+    const res = unlink(targetDir);
+    if (res.unlinked) {
+      log(`Removed symlink ${res.linkPath}`);
+    } else {
+      log(`Could not unlink: ${res.reason}`);
+    }
+    return;
+  }
+
+  if (isLink(args)) {
+    const res = link(targetDir);
+    if (res.linked) {
+      console.log('');
+      log(`Linked ${res.linkPath} -> ${res.target}`);
+      log('Source edits in agents/ are now live in opencode.');
+      log('Note: .opencode is gitignored, so the symlink is not committed.');
+      log('Restart opencode to load the agents.');
+      const dirs = scaffoldMyriadDocs(targetDir);
+      log(`Scaffolded ${dirs.length} myriad-docs directories`);
+      ensureConfig(targetDir);
+      printNextSteps();
+    } else {
+      log(`Could not link: ${res.reason}`);
+    }
+    return;
   }
 
   log(`Installing agents to ${targetDir}`);

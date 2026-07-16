@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "oracle-pm",
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "command": {
+    "sync-agents": {
+      "template": "Sync agents/ to .opencode/agents/ — show diff, rsync with --delete, verify with diff, then report what changed",
+      "description": "Sync agent definitions from agents/ to .opencode/agents/",
+      "subtask": true
+    }
+  }
+}

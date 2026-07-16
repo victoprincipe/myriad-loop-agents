@@ -66,6 +66,16 @@ The installer interactively offers to set up **Context7 MCP** for dependency res
 
 Either path copies the 6 agent markdown files into `.opencode/agents/` in your project and creates the `myriad-docs/exploration/`, `myriad-docs/sdds/`, and `myriad-docs/reports/` directories the agents expect.
 
+### Developing in this repo
+
+The agent source files live in `agents/` at the repo root. opencode only scans `.opencode/agents/`, so while editing in this repo you need the sources discoverable there. Instead of copying (which would let the two drift), run from the repo root:
+
+```bash
+npx myriad-init link
+```
+
+This creates a relative symlink `.opencode/agents` -> `../agents`, so edits to the source files are immediately live in opencode. `.opencode` is gitignored, so the symlink won't be committed. Restart opencode after linking for the agents to appear. To remove the symlink, run `npx myriad-init unlink`. On Windows, creating directory symlinks may require administrator or Developer Mode privileges.
+
 ## Usage
 
 1. Open opencode in your project and select the **Oracle (PM)** agent.

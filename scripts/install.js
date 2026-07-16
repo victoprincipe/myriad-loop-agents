@@ -37,6 +37,48 @@ function install(targetDir, force) {
   return results;
 }
 
+function isSymlink(p) {
+  try {
+    return fs.lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+function link(targetDir) {
+  const opencodeDir = path.join(targetDir, '.opencode');
+  const linkPath = path.join(opencodeDir, 'agents');
+  const target = path.relative(opencodeDir, AGENTS_SOURCE);
+
+  if (!fs.existsSync(opencodeDir)) {
+    fs.mkdirSync(opencodeDir, { recursive: true });
+  }
+
+  if (isSymlink(linkPath)) {
+    fs.unlinkSync(linkPath);
+  } else if (fs.existsSync(linkPath)) {
+    return { linked: false, reason: `${linkPath} exists and is not a symlink (use install instead)` };
+  }
+
+  fs.symlinkSync(target, linkPath, 'dir');
+  return { linked: true, linkPath, target };
+}
+
+function unlink(targetDir) {
+  const linkPath = path.join(targetDir, '.opencode', 'agents');
+
+  if (isSymlink(linkPath)) {
+    fs.unlinkSync(linkPath);
+    return { unlinked: true, linkPath };
+  }
+
+  if (fs.existsSync(linkPath)) {
+    return { unlinked: false, reason: `${linkPath} is not a symlink (remove manually)` };
+  }
+
+  return { unlinked: false, reason: `${linkPath} does not exist` };
+}
+
 function scaffoldMyriadDocs(targetDir) {
   const dirs = [
     'myriad-docs',
@@ -82,4 +124,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { AGENT_FILES, install, scaffoldMyriadDocs, setupContext7 };
+module.exports = { AGENT_FILES, install, link, unlink, scaffoldMyriadDocs, setupContext7 };
