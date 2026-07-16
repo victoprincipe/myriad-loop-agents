@@ -66,6 +66,12 @@ The installer interactively offers to set up **Context7 MCP** for dependency res
 
 Either path copies the 6 agent markdown files into `.opencode/agents/` in your project and creates the `myriad-docs/exploration/`, `myriad-docs/sdds/`, and `myriad-docs/reports/` directories the agents expect.
 
+## Skills
+
+The installer also copies skills (from `skills/`) into `.opencode/skills/` in your project. Currently shipped:
+
+- **caveman** — Ultra-compressed communication mode (cuts output tokens ~65% while keeping full technical accuracy). Activate with `/caveman` or by saying "caveman mode", "less tokens", "be brief". Intensity levels: `lite` / `full` (default) / `ultra`, plus `wenyan-*` classical Chinese variants.
+
 ### Developing in this repo
 
 The agent source files live in `agents/` at the repo root. opencode only scans `.opencode/agents/`, so while editing in this repo you need the sources discoverable there. Instead of copying (which would let the two drift), run from the repo root:

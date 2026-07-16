@@ -4,9 +4,10 @@ const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
 
-const { scaffoldMyriadDocs, setupContext7, AGENT_FILES, link, unlink } = require('../scripts/install.js');
+const { scaffoldMyriadDocs, setupContext7, AGENT_FILES, SKILL_DIRS, link, unlink, installSkills } = require('../scripts/install.js');
 
 const AGENTS_SOURCE = path.join(__dirname, '..', 'agents');
+const SKILLS_SOURCE = path.join(__dirname, '..', 'skills');
 
 function log(...args) {
   console.log('[myriad-init]', ...args);
@@ -149,6 +150,21 @@ async function main() {
   if (copied > 0 || skipped > 0) {
     console.log('');
     log(`Summary: ${copied} installed, ${skipped} skipped`);
+  }
+
+  const skillResults = installSkills(targetDir, force);
+  const skillsInstalled = skillResults.filter((r) => r.status === 'installed').length;
+  const skillsSkipped = skillResults.filter((r) => r.status === 'skipped').length;
+  if (skillsInstalled > 0) {
+    for (const r of skillResults) {
+      if (r.status === 'installed') {
+        log(`Installed skill ${r.file}`);
+      }
+    }
+  }
+  if (skillsInstalled > 0 || skillsSkipped > 0) {
+    console.log('');
+    log(`Skills summary: ${skillsInstalled} installed, ${skillsSkipped} skipped`);
   }
 
   const dirs = scaffoldMyriadDocs(targetDir);

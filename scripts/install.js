@@ -12,6 +12,9 @@ const AGENT_FILES = [
   'herald-feature.md',
 ];
 
+const SKILLS_SOURCE = path.join(__dirname, '..', 'skills');
+const SKILL_DIRS = ['caveman'];
+
 function install(targetDir, force) {
   const agentsDir = path.join(targetDir, '.opencode', 'agents');
 
@@ -32,6 +35,49 @@ function install(targetDir, force) {
 
     fs.copyFileSync(src, dest);
     results.push({ file, status: 'installed' });
+  }
+
+  const skillResults = installSkills(targetDir, force);
+  for (const r of skillResults) {
+    results.push({ file: `${r.file}/`, status: r.status, kind: 'skill' });
+  }
+
+  return results;
+}
+
+function installSkills(targetDir, force) {
+  const skillsDir = path.join(targetDir, '.opencode', 'skills');
+
+  if (!fs.existsSync(skillsDir)) {
+    fs.mkdirSync(skillsDir, { recursive: true });
+  }
+
+  const results = [];
+
+  for (const name of SKILL_DIRS) {
+    const srcDir = path.join(SKILLS_SOURCE, name);
+    const destDir = path.join(skillsDir, name);
+
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(srcDir);
+    let installedAny = false;
+
+    for (const entry of entries) {
+      const src = path.join(srcDir, entry);
+      const dest = path.join(destDir, entry);
+
+      if (fs.existsSync(dest) && !force) {
+        continue;
+      }
+
+      fs.copyFileSync(src, dest);
+      installedAny = true;
+    }
+
+    results.push({ file: name, status: installedAny ? 'installed' : 'skipped' });
   }
 
   return results;
@@ -124,4 +170,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { AGENT_FILES, install, link, unlink, scaffoldMyriadDocs, setupContext7 };
+module.exports = { AGENT_FILES, SKILL_DIRS, install, installSkills, link, unlink, scaffoldMyriadDocs, setupContext7 };

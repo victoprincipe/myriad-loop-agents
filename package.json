@@ -23,7 +23,8 @@
   "files": [
     "agents/",
     "bin/",
-    "scripts/"
+    "scripts/",
+    "skills/"
   ],
   "engines": {
     "node": ">=18"
