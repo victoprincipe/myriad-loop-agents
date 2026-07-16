@@ -5,10 +5,10 @@
     "paths": [".opencode/skills"]
   },
   "command": {
-    "sync-agents": {
-      "template": "Sync agents/ to .opencode/agents/ — show diff, rsync with --delete, verify with diff, then report what changed",
-      "description": "Sync agent definitions from agents/ to .opencode/agents/",
-      "subtask": true
+    "publish": {
+      "template": "Prepare and publish a new version: check git status, review diff, prompt for version bump (patch/minor/major), update version in package.json, commit with a conventional commit message, create an annotated git tag, and push commit and tag to origin",
+      "description": "Bump version, commit, tag, and push a release",
+      "subtask": false
     }
   }
 }
