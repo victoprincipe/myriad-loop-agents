@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "bard-orchestrator",
+  "default_agent": "oracle-pm",
   "skills": {
     "paths": [".opencode/skills"]
   },
