@@ -29,7 +29,7 @@ Myriad Loop is a structured SDLC workflow where specialized AI agents collaborat
 ### 4. Warrior (SWE)
 - **Role:** Software Engineer (Subagent)
 - **Input:** SDD from the Wizard, codebase inventory
-- **Function:** Explores the codebase and implements code strictly following the SDD. It handles edge cases, writes unit tests, runs linters/tests, and stages changes via `git add` without committing. No scope creep is allowed. During retries, it uses diff-based patching to fix localized bugs.
+- **Function:** Explores the codebase and implements code strictly following the SDD. It handles edge cases, writes unit tests, runs scoped linters and tests (targeting changed files), and stages changes via `git add` without committing. No scope creep is allowed. During retries, it uses diff-based patching to fix localized bugs.
 - **Output:** Staged source code, passing tests, and a structured completion report.
 
 ### 5. Herald (Feature Editor)
@@ -41,7 +41,7 @@ Myriad Loop is a structured SDLC workflow where specialized AI agents collaborat
 ### 6. Inquisitor (QA)
 - **Role:** QA Engineer & Code Reviewer (Subagent)
 - **Input:** SDD specification, Warrior's staged changes
-- **Function:** Validates the implementation against the SDD goals. Checks for scope creep, verifies code reuse, runs linters and the full test suite, and performs a code quality review. It classifies failures as either `implementation` (Warrior must fix) or `architectural` (Wizard must revise SDD), and provides line-level PR comments for localized issues.
+- **Function:** Validates the implementation against the SDD goals. Checks for scope creep, verifies code reuse, runs scoped linters and tests (targeting changed files; integration/run-the-app checks are opt-in via the SDD), and performs a code quality review. It classifies failures as either `implementation` (Warrior must fix) or `architectural` (Wizard must revise SDD), and provides line-level PR comments for localized issues.
 - **Output:** A structured report with `STATUS: APPROVED` or `STATUS: REJECTED`.
 
 ## Installation
@@ -70,7 +70,7 @@ Either path copies the 6 agent markdown files into `.opencode/agents/` in your p
 
 The installer also copies skills (from `skills/`) into `.opencode/skills/` in your project. Currently shipped:
 
-- **caveman** — Ultra-compressed communication mode (cuts output tokens ~65% while keeping full technical accuracy). Activate with `/caveman` or by saying "caveman mode", "less tokens", "be brief". Intensity levels: `lite` / `full` (default) / `ultra`, plus `wenyan-*` classical Chinese variants.
+- **caveman** — Ultra-compressed communication mode (cuts output tokens ~65% while keeping full technical accuracy). Activate with `/caveman` or by saying "caveman mode", "less tokens", "be brief". Intensity levels: `lite` / `full` (default) / `ultra`, plus `wenyan-*` classical Chinese variants. The Bard, Wizard, Warrior, and Inquisitor auto-apply caveman internally for compressed agent-to-agent communication.
 
 ### Developing in this repo
 
@@ -125,7 +125,7 @@ The Oracle now writes **YAML frontmatter** at the top of the Exploration Brief w
 
 ## Greenfield Safety
 
-The Inquisitor now detects missing test/lint harnesses (no `scripts.test`, no `pytest` config, etc.) and reports `SETUP MISSING` instead of treating it as a failure. This allows the first feature in a new project to bootstrap the test stack without false rejections.
+The Inquisitor now detects missing test/lint harnesses (no `scripts.test`, no `pytest` config, etc.) and sets a `"setup_missing": true` flag in the JSON manifest instead of treating it as a failure. This allows the first feature in a new project to bootstrap the test stack without false rejections.
 
 ## Typed Report Manifests
 
@@ -134,7 +134,7 @@ Subagents now write JSON manifest files to `myriad-docs/reports/<feature>/` afte
 - `warrior.json` — created/modified files and test results
 - `inquisitor.json` — validation results, line-level failures, and retry history
 
-The Bard reads these manifests for structured decision-making, reducing parsing brittleness.
+On a live pass, the Bard/Herald reads the subagent's task return value directly. The manifest files on disk are durable backups — they are read only on **resume** of an interrupted feature.
 
 ## License
 
