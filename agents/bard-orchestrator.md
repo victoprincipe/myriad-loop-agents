@@ -79,16 +79,21 @@ For each non-`completed` feature (in dependency order), execute this loop:
 
 ### Step A — Design
 1. Read the Brief from `myriad-docs/exploration/` if available.
-2. Derive the project folder name from the exploration filename by stripping `_Brief.md` (e.g., `todo-app_Brief.md` → `todo-app`). Set `folder_path = myriad-docs/sdds/<project-folder>/`.
-3. Create the folder: `mkdir -p <folder_path>`.
-4. Use `task` with `subagent_type: "wizard-architect"` to produce an SDD.
-5. In the prompt, pass:
+2. **Derive the project folder name:**
+   - First, try reading `project_name` from the Brief's YAML frontmatter (between the opening `---` delimiters).
+   - If the frontmatter is absent or lacks `project_name`, fall back to stripping `_Brief.md` from the filename (e.g., `todo-app_Brief.md` → `todo-app`).
+3. Set `folder_path = myriad-docs/sdds/<project-folder>/`.
+4. Create the folder: `mkdir -p <folder_path>`.
+5. Use `task` with `subagent_type: "wizard-architect"` to produce an SDD.
+6. In the prompt, pass:
    - The specific feature description and relevant context from the Brief.
    - The `folder_path` (the folder is already created — Wizard must not create it).
    - Instructions to read the project context via search tools rather than expecting everything in the prompt.
    - Instructions to save the SDD at `{folder_path}/<feature-name>_sdd.md`.
-6. Verify the SDD file was created.
-7. Update memory: set feature status to `design_ready`.
+   - Instructions to also write a wizard.json manifest at `myriad-docs/reports/<feature-name>/wizard.json`.
+7. Verify the SDD file was created.
+8. Read `myriad-docs/reports/<feature-name>/wizard.json` to confirm the SDD paths and dependencies.
+9. Update memory: set feature status to `design_ready`.
 
 ### Step A.5 — Human-in-the-Loop Checkpoint
 1. Present the SDD path to the user.
@@ -101,26 +106,31 @@ For each non-`completed` feature (in dependency order), execute this loop:
 3. In the prompt, pass:
    - The exact file path of the approved SDD.
    - Instructions to use search tools to understand the project environment.
-   - Instructions to implement the design, run tests, and **stage** (do not commit) changes.
-4. Update memory: set feature status to `in_progress`.
+   - Instructions to implement the design, run tests, **stage** (do not commit) changes, and write a warrior.json manifest at `myriad-docs/reports/<feature-name>/warrior.json`.
+4. After the Warrior reports back, read `myriad-docs/reports/<feature-name>/warrior.json` for the structured summary, file lists, and test results.
+5. Update memory: set feature status to `in_progress`.
 
 ### Step C — QA & Review
 1. Use `task` with `subagent_type: "inquisitor-qa"` to review the staged changes.
-2. In the prompt, pass the exact file path of the SDD.
+2. In the prompt, pass:
+   - The exact file path of the SDD.
+   - The attempt number (e.g., "Attempt 1 of 3").
+   - Instructions to write an inquisitor.json manifest at `myriad-docs/reports/<feature-name>/inquisitor.json`.
 3. The Inquisitor will inspect changes, run tests, and return `STATUS: APPROVED` or `STATUS: REJECTED` with feedback.
-4. Update memory: set feature status to `in_review`.
+4. Read `myriad-docs/reports/<feature-name>/inquisitor.json` for the structured validation results and failure classification.
+5. Update memory: set feature status to `in_review`.
 
 ### Step D — Evaluate & Commit
 - If **APPROVED**:
-  1. Generate a Conventional Commit message based on the SDD and QA report (e.g., `feat(auth): add login flow`). Use the Inquisitor's (or Warrior's) `SUMMARY:` line verbatim as the commit body when provided.
+  1. Generate a Conventional Commit message based on the SDD, warrior.json summary, and inquisitor.json (e.g., `feat(auth): add login flow`). Use the `summary` field from the manifests verbatim when provided.
   2. Run `git commit -m "<message>"` and **do not push**.
   3. Update `myriad-docs/memory.json`: set status to `completed`, record the commit hash and SDD path.
   4. Move to the next feature.
 
 - If **REJECTED**:
   - **Two-tiered retry system** (max 3 retries total per feature, shared across both failure types):
-    - **Implementation Failure** (syntax, logic, failing tests): Feed the Inquisitor's line-level error report back to `warrior-swe` for a retry (Step B). **You must pass this report verbatim.** Do not summarize it, or you will lose the specific line numbers the Warrior needs for diff patches. Increment `retries` and append `{"attempt": <retries>, "type": "implementation", "summary": "<short reason from report>"}` to the feature's `history` array.
-    - **Architectural Failure** (impossible constraint, missing dependency): Feed the error report back to `wizard-architect` to revise the SDD (Step A), ask for user approval again, then restart from Step B. Increment `retries` and append `{"attempt": <retries>, "type": "architectural", "summary": "<short reason from report>"}` to the feature's `history` array.
+    - **Implementation Failure** (syntax, logic, failing tests): Read the `failures` array from `inquisitor.json` and pass the line-level error report verbatim back to `warrior-swe` for a retry (Step B). **Do not summarize** the failure details, or you will lose the specific line numbers the Warrior needs for diff patches. Increment `retries` and append `{"attempt": <retries>, "type": "implementation", "summary": "<short reason from report>"}` to the feature's `history` array.
+    - **Architectural Failure** (impossible constraint, missing dependency): Read the failures from `inquisitor.json` and feed the error report back to `wizard-architect` to revise the SDD (Step A), ask for user approval again, then restart from Step B. Increment `retries` and append `{"attempt": <retries>, "type": "architectural", "summary": "<short reason from report>"}` to the feature's `history` array.
   - **Critical Halt at 3 failures**: Do NOT mark as `failed` and skip. Pause the loop, present the final error report (and the `history` audit trail) to the user, and ask for human intervention. Set status to `blocked`.
 
 ---
@@ -142,3 +152,4 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`
 - **No scope creep** — do not add features not in the spec.
 - **Clarification over guessing** — if ambiguous, ask the upstream agent or user.
 - **Code reuse** — instruct subagents to check `memory_state` and existing code before writing new code.
+- **Typed manifests** — prefer reading `wizard.json`, `warrior.json`, and `inquisitor.json` from `myriad-docs/reports/<feature-name>/` for structured decision-making. The free-text reports are supplementary.

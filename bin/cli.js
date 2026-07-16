@@ -2,17 +2,11 @@
 
 const path = require('path');
 const fs = require('fs');
+const readline = require('readline');
 
-const { scaffoldMyriadDocs } = require('../scripts/install.js');
+const { scaffoldMyriadDocs, setupContext7, AGENT_FILES } = require('../scripts/install.js');
 
 const AGENTS_SOURCE = path.join(__dirname, '..', 'agents');
-const AGENT_FILES = [
-  'bard-orchestrator.md',
-  'wizard-architect.md',
-  'warrior-swe.md',
-  'inquisitor-qa.md',
-  'oracle-pm.md',
-];
 
 function log(...args) {
   console.log('[myriad-init]', ...args);
@@ -50,22 +44,40 @@ function copyAgents(targetDir, force) {
 function ensureConfig(targetDir) {
   const configPath = path.join(targetDir, 'opencode.json');
 
+  let config = {};
   if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    if (config.default_agent !== 'oracle-pm') {
-      config.default_agent = 'oracle-pm';
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-      log(`Updated default_agent in ${configPath}`);
-    }
-    return;
+    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   }
 
-  const config = {
-    $schema: 'https://opencode.ai/config.json',
-    default_agent: 'oracle-pm',
-  };
+  if (!config.$schema) {
+    config.$schema = 'https://opencode.ai/config.json';
+  }
+
+  if (!config.default_agent) {
+    config.default_agent = 'oracle-pm';
+    log(`Set default_agent to 'oracle-pm' in ${configPath}`);
+  }
+
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-  log(`Created ${configPath}`);
+  if (!fs.existsSync(configPath)) {
+    log(`Created ${configPath}`);
+  }
+}
+
+function askContext7() {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(
+      '[myriad-init] Add Context7 MCP server for dependency research? (runs npx ctx7 setup) [y/N] ',
+      (answer) => {
+        rl.close();
+        resolve(answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes');
+      },
+    );
+  });
 }
 
 function printNextSteps() {
@@ -73,16 +85,20 @@ function printNextSteps() {
   log('Myriad Loop agents installed successfully!');
   console.log('');
   log('To get started, open opencode and run: @oracle-pm <to discuss your project requirements>');
+  console.log('');
+  log('For single-feature interactive development, use: @herald-feature');
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const force = args.includes('--force');
+  const hasMcpFlag = args.includes('--mcp');
+  const hasNoMcpFlag = args.includes('--no-mcp');
   const targetDir = process.cwd();
 
   if (!fs.existsSync(AGENTS_SOURCE)) {
     console.error(
-      `[myriad-init] ERROR: Agents directory not found at ${AGENTS_SOURCE}. Is the package installed correctly?`
+      `[myriad-init] ERROR: Agents directory not found at ${AGENTS_SOURCE}. Is the package installed correctly?`,
     );
     process.exit(1);
   }
@@ -101,6 +117,25 @@ function main() {
 
   const dirs = scaffoldMyriadDocs(targetDir);
   log(`Scaffolded ${dirs.length} myriad-docs directories`);
+
+  let runContext7 = false;
+  if (hasMcpFlag) {
+    runContext7 = true;
+  } else if (!hasNoMcpFlag && process.stdin.isTTY) {
+    runContext7 = await askContext7();
+  } else if (!hasNoMcpFlag) {
+    log('Skipping Context7 setup (non-interactive). Use --mcp flag to enable.');
+  }
+
+  if (runContext7) {
+    log('Running npx ctx7 setup...');
+    const code = await setupContext7(targetDir);
+    if (code === 0) {
+      log('Context7 MCP configured successfully.');
+    } else {
+      log(`npx ctx7 setup exited with code ${code}. You can re-run manually later.`);
+    }
+  }
 
   ensureConfig(targetDir);
   printNextSteps();

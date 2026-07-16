@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
 const AGENTS_SOURCE = path.join(__dirname, '..', 'agents');
 const AGENT_FILES = [
@@ -8,9 +9,10 @@ const AGENT_FILES = [
   'warrior-swe.md',
   'inquisitor-qa.md',
   'oracle-pm.md',
+  'herald-feature.md',
 ];
 
-function install(targetDir) {
+function install(targetDir, force) {
   const agentsDir = path.join(targetDir, '.opencode', 'agents');
 
   if (!fs.existsSync(agentsDir)) {
@@ -23,7 +25,7 @@ function install(targetDir) {
     const src = path.join(AGENTS_SOURCE, file);
     const dest = path.join(agentsDir, file);
 
-    if (fs.existsSync(dest)) {
+    if (fs.existsSync(dest) && !force) {
       results.push({ file, status: 'skipped' });
       continue;
     }
@@ -36,7 +38,12 @@ function install(targetDir) {
 }
 
 function scaffoldMyriadDocs(targetDir) {
-  const dirs = ['myriad-docs', 'myriad-docs/exploration', 'myriad-docs/sdds'];
+  const dirs = [
+    'myriad-docs',
+    'myriad-docs/exploration',
+    'myriad-docs/sdds',
+    'myriad-docs/reports',
+  ];
   const created = [];
   for (const dir of dirs) {
     const full = path.join(targetDir, dir);
@@ -46,9 +53,22 @@ function scaffoldMyriadDocs(targetDir) {
   return created;
 }
 
+function setupContext7(targetDir) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('npx', ['ctx7', 'setup'], {
+      cwd: targetDir,
+      stdio: 'inherit',
+      shell: true,
+    });
+    proc.on('close', (code) => resolve(code));
+    proc.on('error', (err) => reject(err));
+  });
+}
+
 if (require.main === module) {
   const targetDir = process.env.INIT_CWD || process.cwd();
-  const results = install(targetDir);
+  const force = process.argv.includes('--force');
+  const results = install(targetDir, force);
 
   console.log('[myriad-loop-agents] Installation results:');
   for (const r of results) {
@@ -62,4 +82,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { install, scaffoldMyriadDocs };
+module.exports = { AGENT_FILES, install, scaffoldMyriadDocs, setupContext7 };
