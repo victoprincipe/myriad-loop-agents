@@ -13,7 +13,6 @@ const AGENT_FILES = [
 ];
 
 const SKILLS_SOURCE = path.join(__dirname, '..', 'skills');
-const SKILL_DIRS = ['caveman'];
 
 function install(targetDir, force) {
   const agentsDir = path.join(targetDir, '.opencode', 'agents');
@@ -46,17 +45,21 @@ function install(targetDir, force) {
 }
 
 function installSkills(targetDir, force) {
-  const skillsDir = path.join(targetDir, '.opencode', 'skills');
+  const destSkillsDir = path.join(targetDir, '.opencode', 'skills');
 
-  if (!fs.existsSync(skillsDir)) {
-    fs.mkdirSync(skillsDir, { recursive: true });
+  if (!fs.existsSync(destSkillsDir)) {
+    fs.mkdirSync(destSkillsDir, { recursive: true });
   }
+
+  const skillNames = fs.readdirSync(SKILLS_SOURCE, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
 
   const results = [];
 
-  for (const name of SKILL_DIRS) {
+  for (const name of skillNames) {
     const srcDir = path.join(SKILLS_SOURCE, name);
-    const destDir = path.join(skillsDir, name);
+    const destDir = path.join(destSkillsDir, name);
 
     if (!fs.existsSync(destDir)) {
       fs.mkdirSync(destDir, { recursive: true });
@@ -170,4 +173,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { AGENT_FILES, SKILL_DIRS, install, installSkills, link, unlink, scaffoldMyriadDocs, setupContext7 };
+module.exports = { AGENT_FILES, install, installSkills, link, unlink, scaffoldMyriadDocs, setupContext7 };

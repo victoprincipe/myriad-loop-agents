@@ -30,6 +30,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "generate:opencode": "node scripts/install.js --force",
     "postinstall": "node scripts/install.js"
   }
 }
